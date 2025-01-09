@@ -31,9 +31,9 @@ public class Diana : MonoBehaviour
             impactosDiana++;
 
             Destroy(collision.gameObject);
-            GameManager.DecNumBalas();
+            GameManager.Instance.DecNumBalas();
 
-            gameManager.MoverDiana();
+            GameManager.Instance.DianaAcertada();
         }
     }
 }

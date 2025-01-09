@@ -1,102 +1,136 @@
-using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Texto Balas Escena
-    static public GameObject numBalasText;
-    static int numBalas = 0;
+    // Singleton
+    public static GameManager Instance { get; private set; }
 
-    // Texto Balas Disparadas
-    static public GameObject numDianasText;
-    static int numDianas = 0;
+    // Texto UI
+    public TextMeshProUGUI numBalasText;
+    public TextMeshProUGUI numDianasText;
+    public TextMeshProUGUI temporizadorText;  // Cuenta regresiva
+    public TextMeshProUGUI potenciaText;      // Potencia de disparo
+    public TextMeshProUGUI mensajeFinalText;
 
-    // Texto Balas Disparadas
-    static public GameObject PotenciaText;
-    static int numPotencia = 0;
+    // Variables de juego
+    private int numBalas = 0;
+    private int numDianas = 0;
+    private float tiempoRestante = 20f; // Tiempo inicial
+    private bool juegoEnCurso = true;
 
-    // Diana
-    GameObject[] posicionesDiana;
-    GameObject   diana;
-    public GameObject dianaPrefab;
+    // Referencia al Generador de Dianas
+    public GameObject generadorDianas;
+
+    void Awake()
+    {
+        // Configurar Singleton
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject); // Evitar duplicados
+        }
+    }
 
     void Start()
     {
-        // Buscar el GO del texto
-        numBalasText = GameObject.Find("TextoBalasDisparadas");
-        numDianasText = GameObject.Find("TextoDianasAcertadas");
-        PotenciaText = GameObject.Find("PotenciaText");
-
-        // recupero los 5 elementos para la diana
-        posicionesDiana = GameObject.FindGameObjectsWithTag("respawnDiana");
-
-        // ESTA LLAMADA LA TENEIS QUE SUSTITUIR POR UN INSTANTIATE
-        // diana = GameObject.Find("Diana");
-
-        // MOVER LA ESFERA A UNA POSICI�N ALEATORIA
-        //int tamanyoArrayDianas = posicionesDiana.Length; // tama�o = 5
-        int numeroAleatorio    = Random.Range(0, posicionesDiana.Length); // rango de 0 a 4
-
-        diana = Instantiate(dianaPrefab, posicionesDiana[numeroAleatorio].transform.position, Quaternion.Euler(0,90,0));
-
-        GameObject dianaAleatoria = posicionesDiana[numeroAleatorio];
-        diana.transform.position  = dianaAleatoria.transform.position;
-    
+        ActualizarUI();
     }
 
     void Update()
-    {        
-        // De momento nada
-    }
-
-    static public void ResetearBalas()
     {
-        // poner el número de balas a 0 y cambiar el texto 
-        numBalas = 0;
-        TextMeshProUGUI textoTMP1 = numBalasText.GetComponent<TextMeshProUGUI>();
-        textoTMP1.text = "Balas Disparadas: " + numBalas.ToString();
+        if (juegoEnCurso)
+        {
+            // Reducir el tiempo restante
+            tiempoRestante -= Time.deltaTime;
+            temporizadorText.text = "Tiempo: " + Mathf.CeilToInt(tiempoRestante);
+
+            if (tiempoRestante <= 0)
+            {
+                tiempoRestante = 0;
+                FinDelJuego();
+            }
+        }
     }
 
-    static public void IncNumBalas()
+    public void DianaAcertada()
+    {
+        numDianas++;
+        tiempoRestante += 3f; // Añadir tiempo extra al acertar una diana
+        ActualizarUI();
+    }
+
+    public void BalaDisparada()
     {
         numBalas++;
-        TextMeshProUGUI textoTMP1 = numBalasText.GetComponent<TextMeshProUGUI>();
-        textoTMP1.text = "Balas Disparadas: " + numBalas.ToString();
+        ActualizarUI();
     }
 
-    static public void DecNumBalas()
+    public void DecNumBalas()
     {
-        numBalas--;
-        TextMeshProUGUI textoTMP1 = numBalasText.GetComponent<TextMeshProUGUI>();
-        textoTMP1.text = "Balas Disparadas: " + numBalas.ToString();
+        if (numBalas > 0)
+        {
+            numBalas--;
+            ActualizarUI();
+        }
     }
 
-    public void MoverDiana()
+    void ActualizarUI()
     {
-        //int numeroAleatorio = Random.Range(0, posicionesDiana.Length);
-        //diana.transform.position = posicionesDiana[numeroAleatorio].transform.position;
-
-        int numeroAleatorio = Random.Range(0, posicionesDiana.Length); // rango de 0 a 4
-
-        Destroy(diana);
-
-        numDianas++;
-
-        TextMeshProUGUI textoTMP1 = numDianasText.GetComponent<TextMeshProUGUI>();
-        textoTMP1.text = "Dianas Aceradas: " + numDianas.ToString();
-
-        diana = Instantiate(dianaPrefab, posicionesDiana[numeroAleatorio].transform.position, Quaternion.Euler(0, 90, 0));
-
-        GameObject dianaAleatoria = posicionesDiana[numeroAleatorio];
-        diana.transform.position = dianaAleatoria.transform.position;
+        numBalasText.text = "Balas Disparadas: " + numBalas;
+        numDianasText.text = "Dianas Acertadas: " + numDianas;
     }
 
-    static public void UpdatePotencia(float tiempoPulsadoVar)
+    void FinDelJuego()
     {
+        juegoEnCurso = false;
+        generadorDianas.SetActive(false);
 
-        TextMeshProUGUI textoTMP1 = PotenciaText.GetComponent<TextMeshProUGUI>();
-        textoTMP1.text = "Potencia: " + tiempoPulsadoVar.ToString();
+        float precision = (numBalas > 0) ? (numDianas / (float)numBalas) * 100f : 0f;
+
+        mensajeFinalText.text = "Juego Terminado\n" +
+                                "Dianas Acertadas: " + numDianas + "\n" +
+                                "Balas Disparadas: " + numBalas + "\n" +
+                                "Precisión: " + precision.ToString("F2") + "%";
+
+        if (numDianas > 10 && precision > 50f)
+        {
+            mensajeFinalText.text += "\n¡VICTORIA!";
+            MostrarAnimacionVictoria();
+        }
+        else
+        {
+            mensajeFinalText.text += "\nDERROTA";
+            MostrarAnimacionDerrota();
+        }
+    }
+
+    void MostrarAnimacionVictoria()
+    {
+        Debug.Log("Animación de Victoria");
+    }
+
+    void MostrarAnimacionDerrota()
+    {
+        Debug.Log("Animación de Derrota");
+    }
+
+    // Método para actualizar la potencia
+    public void UpdatePotencia(float tiempoPulsadoVar)
+    {
+        if (potenciaText != null) // Asegurarse de que el texto está asignado
+        {
+            potenciaText.text = "Potencia: " + tiempoPulsadoVar.ToString("F2"); // Mostrar la potencia
+        }
+    }
+
+    // Incrementar el número de balas
+    public void IncNumBalas()
+    {
+        numBalas++;
+        ActualizarUI();
     }
 }

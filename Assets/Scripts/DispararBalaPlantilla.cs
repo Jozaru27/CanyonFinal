@@ -16,7 +16,7 @@ public class DispararBala : MonoBehaviour
     public Transform objetoPadre; 
     
     public bool BotonPulsado = false;
-    public float TiempoPulsado = 0;
+    public float tiempoPulsado = 0;
     
     // Al inicio del Script
     void Start(){
@@ -30,10 +30,10 @@ public class DispararBala : MonoBehaviour
 
         if (BotonPulsado)
         {
-            TiempoPulsado += Time.deltaTime;
+            tiempoPulsado += Time.deltaTime;
         }
 
-        GameManager.UpdatePotencia(TiempoPulsado);
+        GameManager.Instance.UpdatePotencia(tiempoPulsado);
 
         // Si la bala no es nula (o sea, que está instanciada)
         if (balaInstanciada != null) {
@@ -53,20 +53,21 @@ public class DispararBala : MonoBehaviour
     }
 
 
-    private void OnMouseDown(){
-
+    // Método para vincular al evento OnPointerDown del botón
+    public void ComenzarDisparo()
+    {
         BotonPulsado = true;
-
     }
 
-    private void OnMouseUp()
+    // Método para vincular al evento OnPointerUp del botón
+    public void FinalizarDisparo()
     {
         BotonPulsado = false;
 
         // Instanciar el prefab de la bala en la posición inicial
         balaInstanciada = Instantiate(prefabBala, posInicial.transform.position, Quaternion.identity);
 
-        balaInstanciada.name = "Bala"; // !!! 
+        balaInstanciada.name = "Bala"; // !!!
 
         balaInstanciada.transform.SetParent(objetoPadre);
 
@@ -77,13 +78,12 @@ public class DispararBala : MonoBehaviour
         Vector3 direccion = (posFinal.transform.position - posInicial.transform.position).normalized;
 
         // fuerza
-        rb.AddForce(direccion * 25f * TiempoPulsado, ForceMode.Impulse);
+        rb.AddForce(direccion * 25f * tiempoPulsado, ForceMode.Impulse);
 
-        TiempoPulsado = 0;
-        GameManager.UpdatePotencia(TiempoPulsado);
+        tiempoPulsado = 0;
+        GameManager.Instance.UpdatePotencia(tiempoPulsado);
 
         // avisar al incrementor de balas
-        GameManager.IncNumBalas();
+        GameManager.Instance.IncNumBalas();
     }
-
 }
