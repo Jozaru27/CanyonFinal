@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    // Singleton
+    // Singleton, sino el Game Manager da error conforme está configurado
     public static GameManager Instance { get; private set; }
 
     // Texto UI
@@ -13,6 +13,13 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI potenciaText;      // Potencia de disparo
     public TextMeshProUGUI mensajeFinalText;
 
+    // Audios
+    public AudioClip musicaVictoria;   // Música de victoria
+    public AudioClip musicaDerrota;    // Música de derrota
+    public AudioClip musicaImpactoDiana; // Música al golpear una diana
+    public AudioClip musicaDisparo;    // Música al disparar una bala
+    private AudioSource audioSource;   // El componente de AudioSource
+
     // Variables de juego
     private int numBalas = 0;
     private int numDianas = 0;
@@ -21,6 +28,8 @@ public class GameManager : MonoBehaviour
 
     // Referencia al Generador de Dianas
     public GameObject generadorDianas;
+    public GameObject cruceta;  // cruceta que desaparecerá al final
+    public GameObject botonesUI; // Botones que desaparecerán al final
 
     void Awake()
     {
@@ -37,7 +46,13 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        // Ocultar el mensaje final al inicio
+        mensajeFinalText.gameObject.SetActive(false);
+
+        // Actualizar la UI inicial
         ActualizarUI();
+
+        audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -84,39 +99,40 @@ public class GameManager : MonoBehaviour
         numDianasText.text = "Dianas Acertadas: " + numDianas;
     }
 
-    void FinDelJuego()
+void FinDelJuego()
+{
+    juegoEnCurso = false; // Detenemos el juego
+
+    // Desactivamos los objetos interactivos
+    generadorDianas.SetActive(false);  // Detener la generación de dianas
+    cruceta.SetActive(false);          // Detener la cruceta
+    botonesUI.SetActive(false);        // Detener los botones UI
+
+    // Mostramos el mensaje final
+    mensajeFinalText.gameObject.SetActive(true); // Aseguramos que el mensaje final se muestre
+
+    float precision = (numBalas > 0) ? (numDianas / (float)numBalas) * 100f : 0f;
+
+    mensajeFinalText.text = "Juego Terminado\n" +
+                            "Dianas Acertadas: " + numDianas + "\n" +
+                            "Balas Disparadas: " + numBalas + "\n" +
+                            "Precisión: " + precision.ToString("F2") + "%";
+
+    // Comprobamos si es victoria o derrota
+    if (numDianas > 10 && precision > 50f)
     {
-        juegoEnCurso = false;
-        generadorDianas.SetActive(false);
-
-        float precision = (numBalas > 0) ? (numDianas / (float)numBalas) * 100f : 0f;
-
-        mensajeFinalText.text = "Juego Terminado\n" +
-                                "Dianas Acertadas: " + numDianas + "\n" +
-                                "Balas Disparadas: " + numBalas + "\n" +
-                                "Precisión: " + precision.ToString("F2") + "%";
-
-        if (numDianas > 10 && precision > 50f)
-        {
-            mensajeFinalText.text += "\n¡VICTORIA!";
-            MostrarAnimacionVictoria();
-        }
-        else
-        {
-            mensajeFinalText.text += "\nDERROTA";
-            MostrarAnimacionDerrota();
-        }
+        mensajeFinalText.text += "\n¡VICTORIA!";
+        ReproducirMusicaVictoria();
+    }
+    else
+    {
+        mensajeFinalText.text += "\nDERROTA";
+        ReproducirMusicaDerrota();
     }
 
-    void MostrarAnimacionVictoria()
-    {
-        Debug.Log("Animación de Victoria");
-    }
+    Time.timeScale = 0f;
+}
 
-    void MostrarAnimacionDerrota()
-    {
-        Debug.Log("Animación de Derrota");
-    }
 
     // Método para actualizar la potencia
     public void UpdatePotencia(float tiempoPulsadoVar)
@@ -133,4 +149,41 @@ public class GameManager : MonoBehaviour
         numBalas++;
         ActualizarUI();
     }
+
+    public void ReproducirMusicaVictoria()
+    {
+        if (audioSource != null && musicaVictoria != null)
+        {
+            audioSource.clip = musicaVictoria;
+            audioSource.Play();
+        }
+    }
+
+    public void ReproducirMusicaDerrota()
+    {
+        if (audioSource != null && musicaDerrota != null)
+        {
+            audioSource.clip = musicaDerrota;
+            audioSource.Play();
+        }
+    }
+
+    public void ReproducirMusicaImpactoDiana()
+    {
+        if (audioSource != null && musicaImpactoDiana != null)
+        {
+            audioSource.clip = musicaImpactoDiana;
+            audioSource.Play();
+        }
+    }
+
+    public void ReproducirMusicaDisparo()
+    {
+        if (audioSource != null && musicaDisparo != null)
+        {
+            audioSource.clip = musicaDisparo;
+            audioSource.Play();
+        }
+    }
+
 }

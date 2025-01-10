@@ -8,7 +8,7 @@ public class GneradorDianas : MonoBehaviour
     public float posicionX = -4f; // Posición fija en X
     public float limiteYMin = 2f;
     public float limiteYMax = 10f;
-    public float limiteZMin = -20f;
+    public float limiteZMin = -27f;
     public float limiteZMax = 30f;
 
     public float intervaloGeneracion = 2f; // Tiempo entre la aparición de nuevas dianas

@@ -85,5 +85,7 @@ public class DispararBala : MonoBehaviour
 
         // avisar al incrementor de balas
         GameManager.Instance.IncNumBalas();
+
+        GameManager.Instance.ReproducirMusicaDisparo();
     }
 }
